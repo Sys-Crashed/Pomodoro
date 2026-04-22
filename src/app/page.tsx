@@ -5,6 +5,7 @@ import { Play, Pause, RotateCcw, Coffee, Target, Bell } from "lucide-react";
 import { motion } from "framer-motion";
 import { ToolLayout } from "./tool-layout";
 import { Button } from "./button";
+import { useI18n } from "../hooks/useI18n";
 
 type Phase = "work" | "shortBreak" | "longBreak";
 
@@ -21,12 +22,6 @@ const DEFAULT_SETTINGS: PomodoroSettings = {
   longBreakDuration: 15,
   sessionsBeforeLongBreak: 4,
 };
-
-const features = [
-  { icon: Target, text: "番茄工作法" },
-  { icon: Coffee, text: "规律休息" },
-  { icon: Play, text: "专注时间管理" },
-];
 
 function formatTime(seconds: number): string {
   const mins = Math.floor(seconds / 60);
@@ -48,6 +43,7 @@ function FeatureTag({ icon: Icon, text }: { icon: React.ElementType; text: strin
 }
 
 export default function PomodoroPage() {
+  const { t } = useI18n();
   const [settings, setSettings] = useState<PomodoroSettings>(DEFAULT_SETTINGS);
   const [timeLeft, setTimeLeft] = useState(DEFAULT_SETTINGS.workDuration * 60);
   const [isRunning, setIsRunning] = useState(false);
@@ -78,15 +74,9 @@ export default function PomodoroPage() {
   }, [settings]);
 
   const handlePhaseComplete = useCallback(() => {
-    const phaseNames = {
-      work: "工作时间",
-      shortBreak: "短休息",
-      longBreak: "长休息"
-    };
-
     if (notificationPermission === "granted") {
-      new Notification("番茄钟", {
-        body: `${phaseNames[phase]}结束！`,
+      new Notification(t("pomodoro.notification.title"), {
+        body: t(`pomodoro.phase.${phase}.complete`),
         icon: "/favicon.ico"
       });
     }
@@ -106,7 +96,7 @@ export default function PomodoroPage() {
       setTimeLeft(settings.workDuration * 60);
     }
     setIsRunning(false);
-  }, [phase, sessions, settings, notificationPermission]);
+  }, [phase, sessions, settings, notificationPermission, t]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -131,10 +121,15 @@ export default function PomodoroPage() {
 
   const progress = 1 - (timeLeft / getPhaseDuration(phase));
   const phaseColor = phase === "work" ? "#ef4444" : "#22c55e";
-  const phaseLabel = phase === "work" ? "专注工作" : phase === "shortBreak" ? "短休息" : "长休息";
 
   const circumference = 2 * Math.PI * 130;
   const strokeDashoffset = circumference * (1 - progress);
+
+  const features = [
+    { icon: Target, text: t("pomodoro.feature.pomodoro") },
+    { icon: Coffee, text: t("pomodoro.feature.regular") },
+    { icon: Play, text: t("pomodoro.feature.focus") },
+  ];
 
   return (
     <ToolLayout>
@@ -147,7 +142,7 @@ export default function PomodoroPage() {
             transition={{ duration: 0.6 }}
             className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4"
           >
-            番茄钟
+            {t("pomodoro.title")}
           </motion.h1>
 
           <motion.p
@@ -156,7 +151,7 @@ export default function PomodoroPage() {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="text-base md:text-lg text-muted-foreground mb-6"
           >
-            专注工作，规律休息，提高效率
+            {t("pomodoro.description")}
           </motion.p>
 
           <motion.div
@@ -179,10 +174,10 @@ export default function PomodoroPage() {
         </div>
       </section>
 
-      {/* Tool Section */}
+      {/* Timer Section */}
       <section className="py-6 px-4">
         <div className="max-w-md mx-auto">
-          {/* Phase Indicator */}
+          {/* Phase Toggle */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -195,7 +190,7 @@ export default function PomodoroPage() {
               onClick={() => { if (!isRunning) { setPhase("work"); setTimeLeft(getPhaseDuration("work")); }}}
               className="min-w-16"
             >
-              工作
+              {t("pomodoro.phase.work")}
             </Button>
             <Button
               variant={phase === "shortBreak" ? "default" : "secondary"}
@@ -203,7 +198,7 @@ export default function PomodoroPage() {
               onClick={() => { if (!isRunning) { setPhase("shortBreak"); setTimeLeft(getPhaseDuration("shortBreak")); }}}
               className="min-w-16"
             >
-              短休息
+              {t("pomodoro.phase.shortBreak")}
             </Button>
             <Button
               variant={phase === "longBreak" ? "default" : "secondary"}
@@ -211,14 +206,14 @@ export default function PomodoroPage() {
               onClick={() => { if (!isRunning) { setPhase("longBreak"); setTimeLeft(getPhaseDuration("longBreak")); }}}
               className="min-w-16"
             >
-              长休息
+              {t("pomodoro.phase.longBreak")}
             </Button>
           </motion.div>
 
-          {/* Timer Circle */}
+          {/* Progress Ring */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.15 }}
             className="relative w-64 h-64 mx-auto mb-6"
           >
@@ -232,37 +227,31 @@ export default function PomodoroPage() {
                 strokeWidth="8"
                 className="text-border"
               />
-              <motion.circle
+              <circle
                 cx="140"
                 cy="140"
                 r="130"
                 fill="none"
                 stroke={phaseColor}
                 strokeWidth="8"
-                strokeLinecap="round"
                 strokeDasharray={circumference}
-                animate={{ strokeDashoffset }}
-                transition={{ duration: 0.5 }}
+                strokeDashoffset={strokeDashoffset}
+                strokeLinecap="round"
+                className="transition-all duration-1000"
               />
             </svg>
-
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <motion.div
-                key={timeLeft}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="font-mono text-5xl md:text-6xl font-bold"
-              >
+              <span className="font-mono text-5xl md:text-6xl font-bold">
                 {formatTime(timeLeft)}
-              </motion.div>
+              </span>
               <div className="flex items-center gap-1.5 text-sm text-muted-foreground mt-2">
                 {phase === "work" ? <Target className="w-3.5 h-3.5" /> : <Coffee className="w-3.5 h-3.5" />}
-                {phaseLabel}
+                <span>{t(`pomodoro.phase.${phase}`)}</span>
               </div>
             </div>
           </motion.div>
 
-          {/* Controls */}
+          {/* Control Buttons */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -273,7 +262,7 @@ export default function PomodoroPage() {
               variant={notificationPermission === "granted" ? "secondary" : "outline"}
               size="icon"
               onClick={notificationPermission !== "granted" ? requestNotificationPermission : handleReset}
-              title={notificationPermission === "granted" ? "重置" : "开启通知"}
+              title={notificationPermission === "granted" ? t("common.reset") : t("common.enable")}
             >
               {notificationPermission === "granted" ? (
                 <RotateCcw className="w-5 h-5" />
@@ -282,67 +271,64 @@ export default function PomodoroPage() {
               )}
             </Button>
 
-            <motion.button
+            <motion.div
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => setIsRunning(!isRunning)}
-              className="w-20 h-20 rounded-full flex items-center justify-center text-white shadow-lg"
-              style={{ backgroundColor: phaseColor }}
             >
-              {isRunning ? (
-                <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ repeat: Infinity, duration: 1 }}>
+              <Button
+                onClick={() => setIsRunning(!isRunning)}
+                className="w-20 h-20 rounded-full flex items-center justify-center text-white shadow-lg"
+              >
+                {isRunning ? (
                   <Pause className="w-8 h-8" />
-                </motion.div>
-              ) : (
-                <Play className="w-8 h-8 ml-1" />
-              )}
-            </motion.button>
+                ) : (
+                  <Play className="w-8 h-8 ml-1" />
+                )}
+              </Button>
+            </motion.div>
 
             <Button variant="outline" size="icon" onClick={handleSkip}>
               <RotateCcw className="w-5 h-5 scale-x-[-1]" />
             </Button>
           </motion.div>
 
-          {/* Session Counter */}
+          {/* Sessions Completed */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.25 }}
             className="flex items-center justify-center gap-3 mb-4"
           >
-            <span className="text-sm text-muted-foreground">今日完成</span>
+            <span className="text-sm text-muted-foreground">{t("pomodoro.sessions")}</span>
             <div className="flex gap-1.5">
-              {[...Array(settings.sessionsBeforeLongBreak)].map((_, i) => (
+              {Array.from({ length: settings.sessionsBeforeLongBreak }).map((_, i) => (
                 <motion.div
                   key={i}
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
                   className="w-3 h-3 rounded-full"
-                  animate={{
-                    backgroundColor: i < (sessions % settings.sessionsBeforeLongBreak)
-                      ? phaseColor
+                  style={{
+                    backgroundColor: i < sessions % settings.sessionsBeforeLongBreak
+                      ? "var(--primary)"
                       : "var(--border)"
                   }}
                   transition={{ type: "spring", stiffness: 200 }}
                 />
               ))}
             </div>
-            <motion.span
-              key={sessions}
-              initial={{ scale: 1.2 }}
-              animate={{ scale: 1 }}
-              className="text-sm font-medium"
-            >
-              {sessions} 轮
-            </motion.span>
+            <span className="text-sm font-medium">
+              {Math.floor(sessions / settings.sessionsBeforeLongBreak)} {t("pomodoro.rounds")}
+            </span>
           </motion.div>
 
           {/* Settings Toggle */}
           <div className="flex justify-center mb-4">
             <Button
               variant={showSettings ? "default" : "outline"}
-              onClick={() => setShowSettings(!showSettings)}
               size="sm"
+              onClick={() => setShowSettings(!showSettings)}
             >
-              {showSettings ? "收起设置" : "自定义设置"}
+              {showSettings ? t("pomodoro.settings.hide") : t("pomodoro.settings.show")}
             </Button>
           </div>
 
@@ -355,7 +341,8 @@ export default function PomodoroPage() {
             >
               <div className="mb-4">
                 <label className="flex justify-between items-center mb-2 text-sm font-medium">
-                  工作时长 <span>{settings.workDuration} 分钟</span>
+                  <span>{t("pomodoro.settings.work")}</span>
+                  <span>{settings.workDuration} {t("pomodoro.settings.minutes")}</span>
                 </label>
                 <input
                   type="range"
@@ -372,7 +359,8 @@ export default function PomodoroPage() {
 
               <div className="mb-4">
                 <label className="flex justify-between items-center mb-2 text-sm font-medium">
-                  短休息 <span>{settings.shortBreakDuration} 分钟</span>
+                  <span>{t("pomodoro.settings.shortBreak")}</span>
+                  <span>{settings.shortBreakDuration} {t("pomodoro.settings.minutes")}</span>
                 </label>
                 <input
                   type="range"
@@ -389,7 +377,8 @@ export default function PomodoroPage() {
 
               <div className="mb-4">
                 <label className="flex justify-between items-center mb-2 text-sm font-medium">
-                  长休息 <span>{settings.longBreakDuration} 分钟</span>
+                  <span>{t("pomodoro.settings.longBreak")}</span>
+                  <span>{settings.longBreakDuration} {t("pomodoro.settings.minutes")}</span>
                 </label>
                 <input
                   type="range"
@@ -406,7 +395,8 @@ export default function PomodoroPage() {
 
               <div>
                 <label className="flex justify-between items-center mb-2 text-sm font-medium">
-                  长休息间隔 <span>{settings.sessionsBeforeLongBreak} 轮</span>
+                  <span>{t("pomodoro.settings.sessions")}</span>
+                  <span>{settings.sessionsBeforeLongBreak}</span>
                 </label>
                 <input
                   type="range"

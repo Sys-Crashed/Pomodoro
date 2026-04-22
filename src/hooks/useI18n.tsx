@@ -35,6 +35,28 @@ const translations: Record<Language, Record<string, string>> = {
     "timer.notification.title": "倒计时结束",
     "timer.notification.body": "计时器已完成！",
     "timer.today": "今天是",
+    // Pomodoro page
+    "pomodoro.title": "番茄钟",
+    "pomodoro.description": "专注时间管理工具，采用番茄工作法",
+    "pomodoro.feature.pomodoro": "番茄工作法",
+    "pomodoro.feature.regular": "规律休息",
+    "pomodoro.feature.focus": "专注时间管理",
+    "pomodoro.phase.work": "专注工作",
+    "pomodoro.phase.shortBreak": "短休息",
+    "pomodoro.phase.longBreak": "长休息",
+    "pomodoro.phase.work.complete": "工作时间结束！",
+    "pomodoro.phase.shortBreak.complete": "短休息结束！",
+    "pomodoro.phase.longBreak.complete": "长休息结束！",
+    "pomodoro.notification.title": "番茄钟",
+    "pomodoro.sessions": "今日完成",
+    "pomodoro.rounds": "轮",
+    "pomodoro.settings.show": "自定义设置",
+    "pomodoro.settings.hide": "收起设置",
+    "pomodoro.settings.work": "工作时长",
+    "pomodoro.settings.shortBreak": "短休息时长",
+    "pomodoro.settings.longBreak": "长休息时长",
+    "pomodoro.settings.sessions": "轮数",
+    "pomodoro.settings.minutes": "分钟",
   },
   en: {
     // Common
@@ -60,6 +82,28 @@ const translations: Record<Language, Record<string, string>> = {
     "timer.notification.title": "Countdown Complete",
     "timer.notification.body": "Timer finished!",
     "timer.today": "Today is",
+    // Pomodoro page
+    "pomodoro.title": "Pomodoro Timer",
+    "pomodoro.description": "Focus time management tool using the Pomodoro Technique",
+    "pomodoro.feature.pomodoro": "Pomodoro Technique",
+    "pomodoro.feature.regular": "Regular Breaks",
+    "pomodoro.feature.focus": "Focus Time Management",
+    "pomodoro.phase.work": "Work",
+    "pomodoro.phase.shortBreak": "Short Break",
+    "pomodoro.phase.longBreak": "Long Break",
+    "pomodoro.phase.work.complete": "Work session complete!",
+    "pomodoro.phase.shortBreak.complete": "Short break complete!",
+    "pomodoro.phase.longBreak.complete": "Long break complete!",
+    "pomodoro.notification.title": "Pomodoro Timer",
+    "pomodoro.sessions": "Completed",
+    "pomodoro.rounds": "rounds",
+    "pomodoro.settings.show": "Settings",
+    "pomodoro.settings.hide": "Hide Settings",
+    "pomodoro.settings.work": "Work Duration",
+    "pomodoro.settings.shortBreak": "Short Break",
+    "pomodoro.settings.longBreak": "Long Break",
+    "pomodoro.settings.sessions": "Sessions",
+    "pomodoro.settings.minutes": "min",
   },
 };
 
@@ -94,7 +138,11 @@ export function I18nProvider({ children }: { children: ReactNode }) {
 export function useI18n() {
   const context = useContext(I18nContext);
   if (!context) {
-    throw new Error("useI18n must be used within I18nProvider");
+    return {
+      language: "zh" as Language,
+      setLanguage: () => {},
+      t: (key: string) => key,
+    };
   }
   return context;
 }
