@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/tools/PomodoroClock/(.*)",
+      "destination": "/$1"
+    }
+  ]
+}
