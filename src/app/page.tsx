@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Play, Pause, RotateCcw, Coffee, Target } from "lucide-react";
+import { Play, Pause, RotateCcw, Coffee, Target, Bell } from "lucide-react";
 import { motion } from "framer-motion";
 import { ToolLayout } from "./tool-layout";
 import { Button } from "./button";
@@ -54,6 +54,20 @@ export default function PomodoroPage() {
   const [phase, setPhase] = useState<Phase>("work");
   const [sessions, setSessions] = useState(0);
   const [showSettings, setShowSettings] = useState(false);
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>("default");
+
+  useEffect(() => {
+    if ("Notification" in window) {
+      setNotificationPermission(Notification.permission);
+    }
+  }, []);
+
+  const requestNotificationPermission = async () => {
+    if ("Notification" in window && Notification.permission === "default") {
+      const permission = await Notification.requestPermission();
+      setNotificationPermission(permission);
+    }
+  };
 
   const getPhaseDuration = useCallback((p: Phase): number => {
     switch (p) {
@@ -64,6 +78,19 @@ export default function PomodoroPage() {
   }, [settings]);
 
   const handlePhaseComplete = useCallback(() => {
+    const phaseNames = {
+      work: "工作时间",
+      shortBreak: "短休息",
+      longBreak: "长休息"
+    };
+
+    if (notificationPermission === "granted") {
+      new Notification("番茄钟", {
+        body: `${phaseNames[phase]}结束！`,
+        icon: "/favicon.ico"
+      });
+    }
+
     if (phase === "work") {
       const newSessions = sessions + 1;
       setSessions(newSessions);
@@ -79,7 +106,7 @@ export default function PomodoroPage() {
       setTimeLeft(settings.workDuration * 60);
     }
     setIsRunning(false);
-  }, [phase, sessions, settings]);
+  }, [phase, sessions, settings, notificationPermission]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -242,9 +269,15 @@ export default function PomodoroPage() {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="flex items-center justify-center gap-4 mb-6"
           >
-            <Button variant="outline" size="icon" onClick={handleReset}>
-              <RotateCcw className="w-5 h-5" />
-            </Button>
+            {notificationPermission !== "granted" ? (
+              <Button variant="outline" size="icon" onClick={requestNotificationPermission} title="开启通知">
+                <Bell className="w-5 h-5" />
+              </Button>
+            ) : (
+              <Button variant="outline" size="icon" onClick={handleReset}>
+                <RotateCcw className="w-5 h-5" />
+              </Button>
+            )}
 
             <motion.button
               whileHover={{ scale: 1.05 }}
