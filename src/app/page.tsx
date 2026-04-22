@@ -269,15 +269,18 @@ export default function PomodoroPage() {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="flex items-center justify-center gap-4 mb-6"
           >
-            {notificationPermission !== "granted" ? (
-              <Button variant="outline" size="icon" onClick={requestNotificationPermission} title="开启通知">
-                <Bell className="w-5 h-5" />
-              </Button>
-            ) : (
-              <Button variant="outline" size="icon" onClick={handleReset}>
+            <Button
+              variant={notificationPermission === "granted" ? "secondary" : "outline"}
+              size="icon"
+              onClick={notificationPermission !== "granted" ? requestNotificationPermission : handleReset}
+              title={notificationPermission === "granted" ? "重置" : "开启通知"}
+            >
+              {notificationPermission === "granted" ? (
                 <RotateCcw className="w-5 h-5" />
-              </Button>
-            )}
+              ) : (
+                <Bell className="w-5 h-5" />
+              )}
+            </Button>
 
             <motion.button
               whileHover={{ scale: 1.05 }}
